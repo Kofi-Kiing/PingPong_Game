@@ -1,5 +1,6 @@
 import cv2
 print(cv2.__version__)
+import sys
 import time
 import os
 import mediapipe as mp
@@ -32,7 +33,8 @@ class mpHands:
 
 width=1280
 height=720
-cam=cv2.VideoCapture(0)
+CAMERA_INDEX=int(sys.argv[1]) if len(sys.argv)>1 else 0
+cam=cv2.VideoCapture(CAMERA_INDEX)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH,width)
 cam.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 cam.set(cv2.CAP_PROP_FPS,30)
