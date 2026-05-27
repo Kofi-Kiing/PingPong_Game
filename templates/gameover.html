@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Game Over — Hand Paddle</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(ellipse at center, #1A202C 0%, #000000 100%);
+        font-family: 'Inter', sans-serif;
+        color: white;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 400;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #718096;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: 5rem;
+        font-weight: 300;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #F7FAFC;
+        margin-bottom: 16px;
+      }
+
+      .score-label {
+        font-size: 0.75rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #4A5568;
+        margin-bottom: 12px;
+      }
+
+      .score-value {
+        font-size: 6rem;
+        font-weight: 300;
+        color: #F7FAFC;
+        letter-spacing: 0.1em;
+        margin-bottom: 64px;
+      }
+
+      .play-btn {
+        background: #F7FAFC;
+        color: #1A202C;
+        border: none;
+        padding: 18px 64px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 2px;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .play-btn:hover {
+        background: #ffffff;
+        color: #000000;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="eyebrow">Hand Paddle</p>
+    <h1>Game Over</h1>
+    <p class="score-label">Final Score</p>
+    <p class="score-value">{{ score }}</p>
+    <a href="/" class="play-btn">Play Again</a>
+  </body>
+</html>
