@@ -6,9 +6,10 @@
 Single-file Python game (`PingPong_Game.py`) — a hand-gesture-controlled Ping Pong game using OpenCV + MediaPipe. No build system, no test suite, no package manager config.
 
 ### Dependencies
-- `opencv-python` (or `opencv-contrib-python`) and `mediapipe<0.10.21` (the legacy `mp.solutions.hands` API was removed in 0.10.21+).
+- `opencv-python` (or `opencv-contrib-python`) and `mediapipe` (latest).
 - `flake8` for linting.
-- Install via: `pip install opencv-python 'mediapipe<0.10.21' flake8`
+- Install via: `pip install opencv-python mediapipe flake8`
+- The game also requires `hand_landmarker.task` model file in the project root (already committed).
 
 ### Running the application
 - Requires a physical webcam (`/dev/video0`) and a display (X11). The game uses `cv2.VideoCapture(0, cv2.CAP_DSHOW)` — the `CAP_DSHOW` flag is Windows-specific but is silently ignored on Linux.
@@ -24,5 +25,7 @@ Note: the codebase has many pre-existing style warnings; this is expected.
 ### Testing
 No automated test suite exists. Verify the environment by checking that `import cv2` and `import mediapipe` succeed, and that `mp.solutions.hands.Hands()` initializes without error.
 
-### Key gotcha
-The `mediapipe` version must be pinned below `0.10.21`. Version 0.10.21+ removed `mp.solutions` in favor of a new `mp.tasks` API, which breaks the game code.
+### Key info
+The code uses the MediaPipe Tasks API (`mp.tasks.vision.HandLandmarker`) with the `hand_landmarker.task` model file. This works with all current mediapipe versions (0.10.30+). On macOS (Apple Silicon), only mediapipe 0.10.30+ is available, so this API is required.
+
+On headless Linux VMs, `libegl1` must be installed for the new mediapipe Tasks API: `sudo apt-get install -y libegl1`.
