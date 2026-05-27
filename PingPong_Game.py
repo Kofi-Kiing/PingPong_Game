@@ -34,7 +34,10 @@ class mpHands:
 width=1280
 height=720
 CAMERA_INDEX=int(sys.argv[1]) if len(sys.argv)>1 else 0
-cam=cv2.VideoCapture(CAMERA_INDEX)
+if sys.platform=='darwin':
+        cam=cv2.VideoCapture(CAMERA_INDEX,cv2.CAP_AVFOUNDATION)
+else:
+        cam=cv2.VideoCapture(CAMERA_INDEX)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH,width)
 cam.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 cam.set(cv2.CAP_PROP_FPS,30)
