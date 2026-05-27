@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hand Paddle</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(ellipse at center, #1A202C 0%, #000000 100%);
+        font-family: 'Inter', sans-serif;
+        color: white;
+      }
+
+      .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 400;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #718096;
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        font-size: 5rem;
+        font-weight: 300;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #F7FAFC;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+        font-weight: 300;
+        letter-spacing: 0.2em;
+        color: #4A5568;
+        margin-bottom: 64px;
+      }
+
+      .start-btn {
+        background: #F7FAFC;
+        color: #1A202C;
+        border: none;
+        padding: 18px 64px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 2px;
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .start-btn:hover {
+        background: #ffffff;
+        color: #000000;
+      }
+
+      .instructions {
+        margin-top: 80px;
+        text-align: center;
+        color: #2D3748;
+        font-size: 0.78rem;
+        letter-spacing: 0.15em;
+        line-height: 2.2;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="eyebrow">MediaPipe · OpenCV · Flask</p>
+    <h1>Hand Paddle</h1>
+    <p class="subtitle">Control the paddle with your hand</p>
+    <a href="/game" class="start-btn">Start Game</a>
+    <div class="instructions">
+      <p>Hold your index finger up to control the paddle</p>
+      <p>Don't let the ball past you</p>
+      <p>5 lives · Speed increases at 1, 10, 15, 20</p>
+    </div>
+  </body>
+</html>

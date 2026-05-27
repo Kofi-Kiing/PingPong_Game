@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hand Paddle</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: 'Inter', sans-serif;
+        color: white;
+      }
+
+      #stats {
+        width: 1280px;
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 4px;
+        font-size: 0.75rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #4A5568;
+      }
+
+      #stats span {
+        color: #F7FAFC;
+        font-weight: 500;
+      }
+
+      img {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stats">
+      <p>Score &nbsp;<span id="score">0</span></p>
+      <p>Lives &nbsp;<span id="lives">5</span></p>
+    </div>
+    <img src="/video_feed" width="1280" height="720">
+
+    <script>
+      const socket = io();
+
+      socket.on("game_update", (data) => {
+        document.getElementById("score").textContent = data.score;
+        document.getElementById("lives").textContent = data.lives;
+      });
+
+      socket.on("game_over", (data) => {
+        window.location.href = "/gameover?score=" + data.score;
+      });
+    </script>
+  </body>
+</html>
