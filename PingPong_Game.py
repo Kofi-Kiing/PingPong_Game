@@ -1,28 +1,38 @@
 import cv2
 print(cv2.__version__)
-import time 
+import time
+import os
+import mediapipe as mp
 
 class mpHands:
-        import mediapipe as mp
-        def __init__(self,maxHands=2,tol1=1,tol2=1):
-                self.hands=self.mp.solutions.hands.Hands(False,maxHands,)
+        def __init__(self,maxHands=2,tol1=0.5,tol2=0.5):
+                model_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'hand_landmarker.task')
+                base_options=mp.tasks.BaseOptions(model_asset_path=model_path)
+                options=mp.tasks.vision.HandLandmarkerOptions(
+                        base_options=base_options,
+                        running_mode=mp.tasks.vision.RunningMode.VIDEO,
+                        num_hands=maxHands,
+                        min_hand_detection_confidence=tol1,
+                        min_tracking_confidence=tol2)
+                self.hands=mp.tasks.vision.HandLandmarker.create_from_options(options)
+                self.frame_timestamp_ms=0
         def Marks(self,frame):
                 myHands=[]
                 frameRGB=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-                results=self.hands.process(frameRGB)
-                if results.multi_hand_landmarks != None:
-                    for handLandmarks in results.multi_hand_landmarks:
+                mp_image=mp.Image(image_format=mp.ImageFormat.SRGB,data=frameRGB)
+                self.frame_timestamp_ms+=33
+                results=self.hands.detect_for_video(mp_image,self.frame_timestamp_ms)
+                if results.hand_landmarks:
+                    for handLandmarks in results.hand_landmarks:
                         myHand=[]
-                        for landMark in handLandmarks.landmark:
+                        for landMark in handLandmarks:
                                 myHand.append((int(landMark.x*width),int(landMark.y*height)))
                         myHands.append(myHand)
-                return myHands                
-                                
-                                              
+                return myHands
 
 width=1280
 height=720
-cam=cv2.VideoCapture(0,cv2.CAP_DSHOW)
+cam=cv2.VideoCapture(0)
 cam.set(cv2.CAP_PROP_FRAME_WIDTH,width)
 cam.set(cv2.CAP_PROP_FRAME_HEIGHT,height)
 cam.set(cv2.CAP_PROP_FPS,30)
