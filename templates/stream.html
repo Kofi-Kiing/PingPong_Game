@@ -21,6 +21,7 @@
         width: 1280px;
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 16px 4px;
         font-size: 0.75rem;
         letter-spacing: 0.25em;
@@ -36,17 +37,75 @@
       img {
         display: block;
       }
+
+      #controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      #restartBtn {
+        background: #1a202c;
+        color: #f7fafc;
+        border: 1px solid #4a5568;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      #restartBtn:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      #cameraStatus {
+        color: #a0aec0;
+        font-size: 0.65rem;
+        letter-spacing: 0.08em;
+      }
     </style>
   </head>
   <body>
     <div id="stats">
       <p>Score &nbsp;<span id="score">0</span></p>
       <p>Lives &nbsp;<span id="lives">5</span></p>
+      <div id="controls">
+        <button id="restartBtn" type="button">Restart Camera</button>
+        <span id="cameraStatus"></span>
+      </div>
     </div>
-    <img src="/video_feed" width="1280" height="720">
+    <img id="videoStream" src="/video_feed" width="1280" height="720">
 
     <script>
       const socket = io();
+      const restartBtn = document.getElementById("restartBtn");
+      const cameraStatus = document.getElementById("cameraStatus");
+      const videoStream = document.getElementById("videoStream");
+
+      async function restartCamera() {
+        restartBtn.disabled = true;
+        cameraStatus.textContent = "Restarting...";
+        try {
+          const response = await fetch("/restart_camera", { method: "POST" });
+          if (!response.ok) {
+            throw new Error("Restart request failed");
+          }
+          videoStream.src = "/video_feed?t=" + Date.now();
+          cameraStatus.textContent = "Camera restarted";
+        } catch (error) {
+          cameraStatus.textContent = "Restart failed";
+        } finally {
+          setTimeout(() => {
+            cameraStatus.textContent = "";
+          }, 2500);
+          restartBtn.disabled = false;
+        }
+      }
+
+      restartBtn.addEventListener("click", restartCamera);
 
       socket.on("game_update", (data) => {
         document.getElementById("score").textContent = data.score;
