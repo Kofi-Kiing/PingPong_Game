@@ -1,7 +1,8 @@
 import cv2
 import os
+import time
 import mediapipe as mp
-from flask import Flask, render_template, Response, request
+from flask import Flask, render_template, Response, request, stream_with_context
 from flask_socketio import SocketIO
 
 app = Flask(__name__)
@@ -63,77 +64,72 @@ def reset_game():
     game_state["lives"] = 5
     game_state["running"] = True
 
+def _encode_frame(frame):
+    _, buffer = cv2.imencode(".jpg", frame)
+    return (b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n")
+
 def generate_frames():
     cam = cv2.VideoCapture(0, cv2.CAP_AVFOUNDATION)
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     cam.set(cv2.CAP_PROP_FPS, 30)
-    cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    for _ in range(30):
-        cam.read()
-
+    for _ in range(60):
+        ret, _ = cam.read()
+        if ret:
+            break
+        time.sleep(0.05)
     findHands = mpHands(2, .5, .5)
-
-    while True:
-        ignore, frame = cam.read()
-        if not ignore:
-            continue
-        frame = cv2.resize(frame, (width, height))
-
-        cv2.circle(frame, (game_state["xPos"], game_state["yPos"]), ballRadius, ballColor, -1)
-        cv2.putText(frame, str(game_state["score"]), (25, int(6 * paddleHeight)), font, 6, paddleColor, 5)
-        cv2.putText(frame, str(game_state["lives"]), (int(width - 125), int(6 * paddleHeight)), font, 6, paddleColor, 5)
-
-        handData = findHands.Marks(frame)
-        hand = None
-        for h in handData:
-            hand = h
-            cv2.rectangle(frame,
-                          (int(h[8][0] - paddleWidth / 2), 0),
-                          (int(h[8][0] + paddleWidth / 2), paddleHeight),
-                          paddleColor, -1)
-
-        topEdgeBall = game_state["yPos"] - ballRadius
-        bottomEdgeBall = game_state["yPos"] + ballRadius
-        leftEdgeBall = game_state["xPos"] - ballRadius
-        rightEdgeBall = game_state["xPos"] + ballRadius
-
-        if leftEdgeBall <= 0 or rightEdgeBall >= width:
-            game_state["DeltaX"] *= -1
-        if bottomEdgeBall >= height:
-            game_state["DeltaY"] *= -1
-
-        if topEdgeBall <= paddleHeight and hand:
-            if game_state["xPos"] >= int(hand[indexFingPos][0] - paddleWidth / 2) and game_state["xPos"] < (hand[indexFingPos][0] + paddleWidth / 2):
+    try:
+        while True:
+            ret, frame = cam.read()
+            if not ret:
+                time.sleep(0.05)
+                continue
+            frame = cv2.resize(frame, (width, height))
+            cv2.circle(frame, (game_state["xPos"], game_state["yPos"]), ballRadius, ballColor, -1)
+            cv2.putText(frame, str(game_state["score"]), (25, int(6 * paddleHeight)), font, 6, paddleColor, 5)
+            cv2.putText(frame, str(game_state["lives"]), (int(width - 125), int(6 * paddleHeight)), font, 6, paddleColor, 5)
+            handData = findHands.Marks(frame)
+            hand = None
+            for h in handData:
+                hand = h
+                cv2.rectangle(frame,
+                              (int(h[8][0] - paddleWidth / 2), 0),
+                              (int(h[8][0] + paddleWidth / 2), paddleHeight),
+                              paddleColor, -1)
+            topEdgeBall = game_state["yPos"] - ballRadius
+            bottomEdgeBall = game_state["yPos"] + ballRadius
+            leftEdgeBall = game_state["xPos"] - ballRadius
+            rightEdgeBall = game_state["xPos"] + ballRadius
+            if leftEdgeBall <= 0 or rightEdgeBall >= width:
+                game_state["DeltaX"] *= -1
+            if bottomEdgeBall >= height:
                 game_state["DeltaY"] *= -1
-                game_state["score"] += 1
-                socketio.emit("game_update", {"score": game_state["score"], "lives": game_state["lives"]})
-                if game_state["score"] in [1, 10, 15, 20]:
-                    game_state["DeltaY"] *= 6
-                    game_state["DeltaX"] *= 6
-            else:
-                game_state["xPos"] = int(width / 2)
-                game_state["yPos"] = int(height / 2)
-                game_state["lives"] -= 1
-                socketio.emit("game_update", {"score": game_state["score"], "lives": game_state["lives"]})
-
-        game_state["xPos"] += game_state["DeltaX"]
-        game_state["yPos"] += game_state["DeltaY"]
-
-        if game_state["lives"] == 0:
-            cv2.putText(frame, "Game Over!", (200, int(height / 2)), font, 6, (0, 0, 255), 6)
-            _, buffer = cv2.imencode(".jpg", frame)
-            yield (b"--frame\r\n"
-                   b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n")
-            socketio.emit("game_over", {"score": game_state["score"]})
-            reset_game()
-            continue
-
-        _, buffer = cv2.imencode(".jpg", frame)
-        yield (b"--frame\r\n"
-               b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n")
-
-    cam.release()
+            if topEdgeBall <= paddleHeight and hand:
+                if game_state["xPos"] >= int(hand[indexFingPos][0] - paddleWidth / 2) and game_state["xPos"] < (hand[indexFingPos][0] + paddleWidth / 2):
+                    game_state["DeltaY"] *= -1
+                    game_state["score"] += 1
+                    socketio.emit("game_update", {"score": game_state["score"], "lives": game_state["lives"]})
+                    if game_state["score"] in [1, 10, 15, 20]:
+                        game_state["DeltaY"] *= 6
+                        game_state["DeltaX"] *= 6
+                else:
+                    game_state["xPos"] = int(width / 2)
+                    game_state["yPos"] = int(height / 2)
+                    game_state["lives"] -= 1
+                    socketio.emit("game_update", {"score": game_state["score"], "lives": game_state["lives"]})
+            game_state["xPos"] += game_state["DeltaX"]
+            game_state["yPos"] += game_state["DeltaY"]
+            if game_state["lives"] == 0:
+                cv2.putText(frame, "Game Over!", (200, int(height / 2)), font, 6, (0, 0, 255), 6)
+                yield _encode_frame(frame)
+                socketio.emit("game_over", {"score": game_state["score"]})
+                reset_game()
+                continue
+            yield _encode_frame(frame)
+    finally:
+        cam.release()
 
 @app.route("/")
 def landing():
@@ -151,7 +147,7 @@ def gameover():
 @app.route("/video_feed")
 def video_feed():
     return Response(
-        generate_frames(),
+        stream_with_context(generate_frames()),
         mimetype="multipart/x-mixed-replace; boundary=frame",
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
